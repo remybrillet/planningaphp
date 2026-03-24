@@ -179,31 +179,43 @@ async function main() {
     { key: 'planning_horizon_months', value: '3', label: 'Horizon de planification (mois)', type: 'number', category: 'general' },
 
     // --- Capacité du service ---
-    { key: 'total_beds', value: '18', label: 'Nombre total de lits dans le service', type: 'number', category: 'capacite' },
-    { key: 'default_open_beds', value: '12', label: 'Nombre de lits ouverts par défaut', type: 'number', category: 'capacite' },
+    { key: 'total_beds_rea', value: '12', label: 'Lits de réanimation', type: 'number', category: 'capacite' },
+    { key: 'total_beds_si', value: '6', label: 'Lits de soins intensifs', type: 'number', category: 'capacite' },
+    { key: 'total_beds', value: '18', label: 'Total lits (réa + SI)', type: 'number', category: 'capacite' },
+    { key: 'default_open_beds', value: '18', label: 'Lits ouverts par défaut', type: 'number', category: 'capacite' },
 
-    // --- Ratios agents / lits — JOUR ---
-    { key: 'ratio_agent_beds_jour', value: '3', label: 'Nombre de lits par agent en jour', type: 'number', category: 'effectifs' },
-    { key: 'min_staff_jour_base', value: '3', label: 'Effectif plancher en jour (même si peu de lits)', type: 'number', category: 'effectifs' },
-    { key: 'max_staff_jour', value: '10', label: 'Effectif plafond en jour', type: 'number', category: 'effectifs' },
+    // --- Effectifs fixes par palier de lits ---
+    { key: 'staff_jour', value: '8', label: 'Infirmières requises en JOUR', type: 'number', category: 'effectifs' },
+    { key: 'staff_nuit', value: '8', label: 'Infirmières requises en NUIT', type: 'number', category: 'effectifs' },
     { key: 'min_puer_jour', value: '2', label: 'Puéricultrices minimum en jour', type: 'number', category: 'effectifs' },
-
-    // --- Ratios agents / lits — NUIT ---
-    { key: 'ratio_agent_beds_nuit', value: '3', label: 'Nombre de lits par agent en nuit', type: 'number', category: 'effectifs' },
-    { key: 'min_staff_nuit_base', value: '2', label: 'Effectif plancher en nuit (même si peu de lits)', type: 'number', category: 'effectifs' },
-    { key: 'max_staff_nuit', value: '8', label: 'Effectif plafond en nuit', type: 'number', category: 'effectifs' },
     { key: 'min_puer_nuit', value: '1', label: 'Puéricultrices minimum en nuit', type: 'number', category: 'effectifs' },
 
-    // --- Règles de repos ---
-    { key: 'min_rest_hours', value: '11', label: 'Repos minimum entre deux gardes (heures)', type: 'number', category: 'regles' },
+    // --- Temps de travail mensuel (heures dues selon taille du mois) ---
+    { key: 'hours_per_day_reference', value: '7.8', label: 'Heures dues par jour ouvré (base calcul mensuel)', type: 'number', category: 'regles' },
+    { key: 'shift_duration', value: '12', label: 'Durée d\'une garde (heures)', type: 'number', category: 'regles' },
+
+    // --- Contraintes de planification ---
     { key: 'max_consecutive_shifts', value: '3', label: 'Gardes consécutives maximum', type: 'number', category: 'regles' },
     { key: 'max_consecutive_nights', value: '2', label: 'Nuits consécutives maximum', type: 'number', category: 'regles' },
+    { key: 'max_shifts_in_7_days', value: '4', label: 'Maximum de gardes sur 7 jours glissants (interdit 5 en 7)', type: 'number', category: 'regles' },
+    { key: 'min_rest_hours', value: '11', label: 'Repos minimum entre deux gardes (heures)', type: 'number', category: 'regles' },
     { key: 'min_rest_after_night', value: '24', label: 'Repos minimum après une nuit (heures)', type: 'number', category: 'regles' },
-    { key: 'max_hours_per_week', value: '48', label: 'Heures maximum par semaine', type: 'number', category: 'regles' },
-    { key: 'min_days_off_per_week', value: '2', label: 'Jours de repos minimum par semaine', type: 'number', category: 'regles' },
-    { key: 'max_weekends_per_month', value: '2', label: 'Week-ends travaillés maximum par mois', type: 'number', category: 'regles' },
     { key: 'forbid_jour_after_nuit', value: 'true', label: 'Interdire un shift jour après une nuit', type: 'boolean', category: 'regles' },
-    { key: 'shifts_per_month_full_time', value: '13', label: 'Nombre de gardes/mois pour un temps plein', type: 'number', category: 'regles' },
+    { key: 'weekend_frequency', value: '3', label: 'Fréquence week-ends (1 sur N travaillé)', type: 'number', category: 'regles' },
+
+    // --- Max repos consécutifs selon temps de travail ---
+    { key: 'max_consecutive_off_100', value: '4', label: 'Max jours de repos consécutifs à 100%', type: 'number', category: 'regles' },
+    { key: 'max_consecutive_off_90', value: '5', label: 'Max jours de repos consécutifs à 90%', type: 'number', category: 'regles' },
+    { key: 'max_consecutive_off_80', value: '5', label: 'Max jours de repos consécutifs à 80%', type: 'number', category: 'regles' },
+    { key: 'max_consecutive_off_70', value: '6', label: 'Max jours de repos consécutifs à 70%', type: 'number', category: 'regles' },
+    { key: 'max_consecutive_off_60', value: '7', label: 'Max jours de repos consécutifs à 60%', type: 'number', category: 'regles' },
+    { key: 'max_consecutive_off_50', value: '8', label: 'Max jours de repos consécutifs à 50%', type: 'number', category: 'regles' },
+
+    // --- Règles de regroupement ---
+    { key: 'weekend_en_bloc', value: 'true', label: 'Week-end en bloc (samedi travaillé = dimanche aussi)', type: 'boolean', category: 'regles' },
+    { key: 'vendredi_force_si_weekend', value: 'true', label: 'Favoriser vendredi-samedi-dimanche en bloc', type: 'boolean', category: 'regles' },
+    { key: 'favoriser_consecutifs', value: 'true', label: 'Favoriser 2 jours de garde consécutifs', type: 'boolean', category: 'regles' },
+    { key: 'respecter_deshydrata', value: 'true', label: 'Respecter les déshydrata des agents', type: 'boolean', category: 'regles' },
 
     // --- Application ---
     { key: 'app_name', value: 'PlanningAPHP', label: 'Nom de l\'application', type: 'string', category: 'application' },

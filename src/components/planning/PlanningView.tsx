@@ -49,10 +49,8 @@ type PanelState =
   | { type: 'agent'; userId: string; fromDay?: Date }
 
 type AppConfig = {
-  ratio_agent_beds_jour: number
-  ratio_agent_beds_nuit: number
-  min_staff_jour_base: number
-  min_staff_nuit_base: number
+  staff_jour: number
+  staff_nuit: number
   total_beds: number
   default_open_beds: number
   app_name: string
@@ -65,9 +63,8 @@ type AppConfig = {
 }
 
 const DEFAULT_CFG: AppConfig = {
-  ratio_agent_beds_jour: 3, ratio_agent_beds_nuit: 3,
-  min_staff_jour_base: 3, min_staff_nuit_base: 2,
-  total_beds: 18, default_open_beds: 12,
+  staff_jour: 8, staff_nuit: 8,
+  total_beds: 18, default_open_beds: 18,
   app_name: 'PlanningAPHP', service_name: 'Réanimation Néonatale', hospital_name: 'CHIPS Poissy',
   shiftJourStart: '07:00', shiftJourEnd: '19:00', shiftNuitStart: '19:00', shiftNuitEnd: '07:00',
 }
@@ -132,12 +129,10 @@ export function PlanningView() {
         const jour = shifts.find((s: { type: string }) => s.type === 'JOUR')
         const nuit = shifts.find((s: { type: string }) => s.type === 'NUIT')
         const newCfg: AppConfig = {
-          ratio_agent_beds_jour: parseInt(c.ratio_agent_beds_jour || '3'),
-          ratio_agent_beds_nuit: parseInt(c.ratio_agent_beds_nuit || '3'),
-          min_staff_jour_base: parseInt(c.min_staff_jour_base || '3'),
-          min_staff_nuit_base: parseInt(c.min_staff_nuit_base || '2'),
+          staff_jour: parseInt(c.staff_jour || '8'),
+          staff_nuit: parseInt(c.staff_nuit || '8'),
           total_beds: parseInt(c.total_beds || '18'),
-          default_open_beds: parseInt(c.default_open_beds || '12'),
+          default_open_beds: parseInt(c.default_open_beds || '18'),
           app_name: c.app_name || 'PlanningAPHP',
           service_name: c.service_name || 'Réanimation Néonatale',
           hospital_name: c.hospital_name || 'CHIPS Poissy',
@@ -159,9 +154,9 @@ export function PlanningView() {
   }
   const hasPlanifie = stats.planifie > 0
 
-  // Ratios dynamiques depuis la config
-  const staffJour = Math.max(cfg.min_staff_jour_base, Math.ceil(openBeds / cfg.ratio_agent_beds_jour))
-  const staffNuit = Math.max(cfg.min_staff_nuit_base, Math.ceil(openBeds / cfg.ratio_agent_beds_nuit))
+  // Effectifs fixes depuis la config
+  const staffJour = cfg.staff_jour
+  const staffNuit = cfg.staff_nuit
 
   const handleGenerate = async () => {
     setGenerating(true)
@@ -369,13 +364,14 @@ export function PlanningView() {
                 <div className="flex flex-col justify-center">
                   <p className="text-sm text-primary-600">
                     <Users className="w-4 h-4 inline mr-1" />
-                    Jour : <strong>{staffJour}</strong> agents
-                    <span className="text-primary-400"> (1 pour {cfg.ratio_agent_beds_jour} lits)</span>
+                    Jour : <strong>{staffJour}</strong> infirmières
                   </p>
                   <p className="text-sm text-primary-600 mt-1">
                     <Moon className="w-4 h-4 inline mr-1" />
-                    Nuit : <strong>{staffNuit}</strong> agents
-                    <span className="text-primary-400"> (1 pour {cfg.ratio_agent_beds_nuit} lits)</span>
+                    Nuit : <strong>{staffNuit}</strong> infirmières
+                  </p>
+                  <p className="text-xs text-primary-400 mt-1">
+                    Modifiable dans Admin &gt; Configuration
                   </p>
                 </div>
                 <div className="flex items-end">
