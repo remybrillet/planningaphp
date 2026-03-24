@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+export const dynamic = 'force-dynamic'
 import { requireRole } from '@/lib/auth'
 import { RapportsView } from '@/components/rapports/RapportsView'
 

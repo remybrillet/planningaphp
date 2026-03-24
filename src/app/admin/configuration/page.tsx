@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/prisma'
 import { ConfigurationView } from '@/components/admin/ConfigurationView'
 

@@ -1,7 +1,6 @@
 'use client'
 
 import { forwardRef } from 'react'
-import { motion } from 'framer-motion'
 import { Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -49,12 +48,11 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     return (
-      <motion.button
+      <button
         ref={ref}
-        whileHover={disabled || isLoading ? undefined : { scale: 1.02 }}
-        whileTap={disabled || isLoading ? undefined : { scale: 0.98 }}
         className={cn(
-          'inline-flex items-center justify-center rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed',
+          'inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed',
+          'hover:scale-[1.02] active:scale-[0.98]',
           variantStyles[variant],
           sizeStyles[size],
           className
@@ -68,7 +66,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           icon
         ) : null}
         {children}
-      </motion.button>
+      </button>
     )
   }
 )

@@ -16,8 +16,9 @@ type EventData = Record<string, string | number | boolean>
 export function useTracking() {
   const trackEvent = (name: EventName, data?: EventData) => {
     // Umami tracking
-    if (typeof window !== 'undefined' && (window as UmamiWindow).umami) {
-      ;(window as UmamiWindow).umami.track(name, data)
+    const umamiWin = typeof window !== 'undefined' ? (window as UmamiWindow) : null
+    if (umamiWin?.umami) {
+      umamiWin.umami.track(name, data)
     }
 
     // GA4 tracking (only if consent given)
