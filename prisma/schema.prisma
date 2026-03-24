@@ -1,0 +1,234 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// AUTHENTIFICATION & UTILISATEURS
+// ============================================
+
+enum Role {
+  ADMIN
+  GESTIONNAIRE
+  EMPLOYE
+}
+
+enum Competence {
+  INF        // Infirmière
+  PUERICULTRCE // Puéricultrice
+}
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  password       String
+  firstName      String
+  lastName       String
+  role           Role      @default(EMPLOYE)
+  competence     Competence
+  workPercentage Int       @default(100) // 50, 60, 70, 80, 90, 100
+  phone          String?
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // Relations
+  assignments    Assignment[]
+  leaveRequests  LeaveRequest[]
+  deshydrata     Deshydrata[]
+  auditLogs      AuditLog[]   @relation("AuditUser")
+  notifications  Notification[]
+
+  @@map("users")
+}
+
+// ============================================
+// PLANNING & SHIFTS
+// ============================================
+
+enum ShiftType {
+  JOUR
+  NUIT
+}
+
+model ShiftTemplate {
+  id        String    @id @default(cuid())
+  name      String    // "Jour", "Nuit"
+  type      ShiftType
+  startTime String    // "07:00"
+  endTime   String    // "19:00"
+  duration  Int       @default(12) // heures
+  breakTime Int       @default(30) // minutes de pause légale
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  assignments Assignment[]
+
+  @@map("shift_templates")
+}
+
+model Assignment {
+  id              String        @id @default(cuid())
+  date            DateTime      @db.Date
+  userId          String
+  shiftTemplateId String
+  status          AssignmentStatus @default(PLANIFIE)
+  notes           String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  createdBy       String?       // ID de l'utilisateur qui a créé
+
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shiftTemplate ShiftTemplate @relation(fields: [shiftTemplateId], references: [id])
+
+  @@unique([date, userId, shiftTemplateId])
+  @@index([date])
+  @@index([userId])
+  @@map("assignments")
+}
+
+enum AssignmentStatus {
+  PLANIFIE
+  CONFIRME
+  ANNULE
+  REMPLACE
+}
+
+// ============================================
+// CONGÉS & ABSENCES
+// ============================================
+
+enum LeaveType {
+  CP        // Congés payés
+  RTT
+  MALADIE
+  FORMATION
+  MATERNITE
+  PATERNITE
+  AUTRE
+}
+
+enum LeaveStatus {
+  EN_ATTENTE
+  APPROUVE
+  REFUSE
+  ANNULE
+}
+
+model LeaveRequest {
+  id          String      @id @default(cuid())
+  userId      String
+  type        LeaveType
+  startDate   DateTime    @db.Date
+  endDate     DateTime    @db.Date
+  reason      String?
+  status      LeaveStatus @default(EN_ATTENTE)
+  reviewedBy  String?
+  reviewedAt  DateTime?
+  reviewNote  String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([startDate, endDate])
+  @@index([status])
+  @@map("leave_requests")
+}
+
+// ============================================
+// DÉSHYDRATA (jours souhaités de non-travail)
+// ============================================
+
+model Deshydrata {
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime @db.Date
+  priority  Int      @default(1) // 1 = prioritaire, 2 = souhaité
+  reason    String?
+  isGranted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([date])
+  @@map("deshydrata")
+}
+
+// ============================================
+// CONFIGURATION
+// ============================================
+
+model Configuration {
+  id       String @id @default(cuid())
+  key      String @unique
+  value    String
+  label    String // Description lisible
+  type     String @default("string") // string, number, boolean, json
+  category String @default("general") // general, effectifs, regles
+
+  @@map("configurations")
+}
+
+// ============================================
+// NOTIFICATIONS
+// ============================================
+
+enum NotificationType {
+  NOUVELLE_AFFECTATION
+  MODIFICATION_PLANNING
+  CONGE_APPROUVE
+  CONGE_REFUSE
+  RAPPEL_SHIFT
+  ALERTE_EFFECTIF
+  SYSTEME
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  isRead    Boolean          @default(false)
+  link      String?          // Lien vers la page concernée
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+// ============================================
+// AUDIT
+// ============================================
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String   // CREATE, UPDATE, DELETE
+  entity     String   // Assignment, LeaveRequest, User, etc.
+  entityId   String
+  oldValues  Json?
+  newValues  Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  user User? @relation("AuditUser", fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
